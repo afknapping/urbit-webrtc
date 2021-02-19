@@ -1,0 +1,4 @@
+/+  icepond
+:-  %say
+|=  [* ~ ~]
+icepond
