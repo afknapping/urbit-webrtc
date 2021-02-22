@@ -61,7 +61,7 @@
 
 ++  on-init
     ~&  >  'icepond init: default ice fetcher installed'
-    `this(state [%0 acquire-ice=default-acquire:icepond running-requests=~ running-threads=~])
+    `this(state [%0 acquire-ice=(strand-from-config:icepond default-config:icepond) running-requests=~ running-threads=~])
 ++  on-save
     ^-  vase
     !>(state)

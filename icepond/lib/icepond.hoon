@@ -6,10 +6,6 @@
 :: TODO: The default acquire should poke the sponsor (if other than
 :: self, hello ~zod) for ICE candidates for itself and its team
 :: but return ~ for all others
-++  default-acquire
-    =/  m  (strand ,response:icepond)
-    ^-  $-(@p form:m)
-    (or (team-only (or from-sponsor google-open)) (sponsored-only (or from-sponsor google-open)))
 ++  from-sponsor
     |=  requester=@p
     =/  m  (strand ,response:icepond)
@@ -83,11 +79,20 @@
             ==
       ==
     pure:m
-++  google-open
-    =/  m  (strand ,response:icepond)
-    |=  requester=@p
-    (pure:m [%servers ~[[urls=~['stun:stun.l.google.com:19302'] auth=~]]])
+++  google-open  [%these-servers ~[[urls=~['stun:stun.l.google.com:19302'] auth=~]]]
 
+++  strand-from-config
+    |=  config=fetcher-config:icepond
+    |-
+    ?-  config
+      [%from-sponsor *]    from-sponsor
+      [%these-servers *]   (these-servers +.config)
+      [%sponsored-only *]  (sponsored-only $(config +.config))
+      [%team-only *]       (team-only $(config +.config))
+      [%or * *]            (or $(config p.config) $(config q.config))
+    ==
+++  default-config
+  [%or [%team-only [%or google-open [%from-sponsor ~]]] [%sponsored-only google-open]]
 :: TODO:
 ::  - COTURN credential fetching
 ::  - group filtering
