@@ -12,7 +12,8 @@
 ^-  thread:spider
 |=  arg=vase
 =/  m  (strand ,vase)
+=/  n  (strand ,response:icepond-types)
 ^-  form:m
-=+  !<([ship=@p  strand=$-(@p form:(strand ,response:icepond-types))] arg)
+=+  !<([~ ship=@p strand=$-(@p form:n)] arg)
 ;<  result-unwrapped=response:icepond-types  bind:m  (strand ship)
 (pure:m !>(result-unwrapped))

@@ -193,7 +193,7 @@
 ++  start-and-watch-thread
     |=  [=tid:spider strand=$-(@p form:response-strand) ship=@p]
     ^-  (list card:agent:gall)
-    =/  =cage  [%spider-start !>([parent=~ use=tid file=%icepond-fetch vase=!>([ship=ship strand=strand])])]
+    =/  =cage  [%spider-start !>([parent=~ use=tid file=%icepond-fetch vase=!>([~ ship=ship strand=strand])])]
     :~
     [%pass /start-acquire/[tid] %agent [our.bowl %spider] %poke cage]
     [%pass /acquired-ice-servers/[tid] %agent [our.bowl %spider] %watch /thread-result/[tid]]
