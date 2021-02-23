@@ -1,7 +1,4 @@
-/-  icepond-types=icepond, spider
-/+  icepond
+/-  icepond-types=icepond
 :-  %say
-=,  strand=strand:spider
-=/  m  (strand ,response:icepond-types)
 |=  [[now=@day eny=@uvJ bec=beak] [=fetcher-config:icepond-types ~] ~]
-[%set-acquire-ice (strand-from-config:icepond fetcher-config)]
+[%set-fetcher-config fetcher-config]

@@ -48,7 +48,7 @@
     $%  state-0
     ==
 +$  state-0
-    [%0 acquire-ice=$-(@p form:response-strand) running-requests=(map @ta tid:spider) running-threads=(map tid:spider @ta)]
+    [%0 =fetcher-config:icepond-types running-requests=(map @ta tid:spider) running-threads=(map tid:spider @ta)]
 +$  card  card:agent:gall
 --
 %-  agent:dbug
@@ -58,10 +58,10 @@
 |_  =bowl:gall
 +*  this  .
     default  ~(. (default-agent this %|) bowl)
-
+    helper    ~(. +> bowl)
 ++  on-init
     ~&  >  'icepond init: default ice fetcher installed'
-    `this(state [%0 acquire-ice=(strand-from-config:icepond default-config:icepond) running-requests=~ running-threads=~])
+    `this(state [%0 fetcher-config=default-config:icepond running-requests=~ running-threads=~])
 ++  on-save
     ^-  vase
     !>(state)
@@ -76,9 +76,9 @@
   ?-  -.old-state  
       %0
       ~&  >  'icepond load from version 0'
-      :_  this(state [%0 acquire-ice=acquire-ice:old-state running-requests=~ running-threads=~])
+      :_  this(state [%0 fetcher-config=fetcher-config:old-state running-requests=~ running-threads=~])
       %+  weld
-          (turn ~(tap in ~(key by running-requests:old-state)) kick-requester)
+          (turn ~(tap in ~(key by running-requests:old-state)) kick-requester:helper)
       (turn ~(tap in ~(key by running-threads:old-state)) stop-thread)
       ::
   ==
@@ -88,12 +88,12 @@
   |=  [=mark =vase]
   ^-  (quip card _this)
   ?+  mark  (on-poke:default mark vase)
-      %set-acquire-ice
+      %set-fetcher-config
       ?>  (team:title our.bowl src.bowl) :: Only us or our moons
-      =/  new-acquire-ice  !<($-(@p form:response-strand) vase)
-      =/  new-state  state(acquire-ice new-acquire-ice)
+      =/  new-fetcher-config  !<(fetcher-config:icepond-types vase)
       ~&  >  'icepond: new ice server acquisition strand'
-      `this(state new-state)
+      ~&  >  new-fetcher-config
+      `this(fetcher-config.state new-fetcher-config)
   ==
 
 :: handle watches by poking spider with our strand 
@@ -112,12 +112,13 @@
     =/  new-running-requests  (~(put by running-requests:state) rqid tid)
     =/  new-running-threads  (~(put by running-threads:state) tid rqid)
     =/  new-state  state(running-requests new-running-requests, running-threads new-running-threads)
+    ~&  >  "watched rqid {<rqid>} tid {<tid>}"
     :_  this(state new-state)
-    (start-and-watch-thread tid=tid strand=acquire-ice:state ship=src.bowl)
+    (start-and-watch-thread:helper tid=tid strand=(strand-from-config:icepond fetcher-config:state) ship=src.bowl)
   ==
 
 :: handle leaves by poking spider to stop the relevant thread
-++  on-leave  
+++  on-leave
   |=  =path
   ^-  (quip card _this)
   ?+  path  (on-leave:default path)
@@ -132,17 +133,25 @@
       =/  new-state  state(running-requests new-running-requests, running-threads new-running-threads)
       :_  this(state new-state)
       :~
-        (stop-thread tid)
+        (stop-thread:helper tid)
       ==
   ==
 ++  on-peek   on-peek:default
 ++  on-agent
     |=  [=wire =sign:agent:gall]
     ^-  (quip card _this)
+    ~&  >  "on-agent {<wire>} sign {<sign>}"
     ?+  -.wire  (on-agent:default wire sign)
         %start-acquire
-        ~&  >  "Successfully started thread {<+<.wire>}"
-        `this
+        ?+  sign 
+            ~&  >>  'unknown sign'  !!
+            [%poke-ack *]
+            ?+  p.sign
+                ~&  >>  +>.p.sign
+                !!
+              %~  ~&  >  "Sucessfully started thread {<+>.wire>}"  `this
+            ==
+        ==
         ::
         %stop-acquire
         ~&  >  "Successfully stopped thread {<+<.wire>}"
@@ -154,17 +163,20 @@
             ?+  p.cage.sign  (on-agent:default wire sign)
                 %thread-fail
                 =/  failure  !<([term tang] q.cage.sign)
+                ~&  >>  failure
                 ~|  -.failure  !!
                 ::
                 %thread-done
                 =/  tid  +<.wire
                 =/  rqid  (~(got by running-threads:state) tid)
+                ~&  >  "Giving fact to requester {<rqid>} tid {<tid>} and kicking"
                 =/  =response:icepond-types  !<(response:icepond-types q.cage.sign)
+                ~&  >  "Response {<response>}"
                 =/  new-running-requests  (~(del by running-requests:state) rqid)
                 =/  new-running-threads  (~(del by running-threads:state) tid)
                 =/  new-state  state(running-requests new-running-requests, running-threads new-running-threads)
                 :_  this(state new-state)
-                (kick-requester-with-fact rqid response)
+                (kick-requester-with-fact:helper rqid response)
             ==
         ==
     ==
@@ -193,9 +205,9 @@
 ++  start-and-watch-thread
     |=  [=tid:spider strand=$-(@p form:response-strand) ship=@p]
     ^-  (list card:agent:gall)
-    =/  =cage  [%spider-start !>([parent=~ use=tid file=%icepond-fetch vase=!>([~ ship=ship strand=strand])])]
+    =/  =cage  [%spider-start !>([parent=~ use=`tid file=%icepond-fetch vase=!>([~ ship=ship strand=strand])])]
     :~
-    [%pass /start-acquire/[tid] %agent [our.bowl %spider] %poke cage]
     [%pass /acquired-ice-servers/[tid] %agent [our.bowl %spider] %watch /thread-result/[tid]]
+    [%pass /start-acquire/[tid] %agent [our.bowl %spider] %poke cage]
     ==
 --
