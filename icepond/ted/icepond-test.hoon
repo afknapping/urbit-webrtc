@@ -9,8 +9,6 @@
 ;<  eny=@uv  bind:m  get-entropy:strandio
 ;<  ~        bind:m  (watch:strandio /ice-servers-from-self [our %icepond] /ice-servers/(scot %uv (sham eny)))
 ~&  >  'watching'
-;<  ~        bind:m  (sleep:strandio ~s0)
-~&  >  'slept'
 ;<  =cage    bind:m  (take-fact:strandio /ice-servers-from-self)
 ~&  >  cage
 ?>  =(p.cage %response)
